@@ -266,15 +266,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ActivityLevel.active: ('Activo', 'Ejercicio 6-7 días/semana'),
       ActivityLevel.veryActive: ('Muy activo', 'Ejercicio intenso diario'),
     };
-    return options.entries.map((e) {
-      return RadioListTile<ActivityLevel>(
-        title: Text(e.value.$1),
-        subtitle: Text(e.value.$2),
-        value: e.key,
+    return [
+      RadioGroup<ActivityLevel>(
         groupValue: _activityLevel,
-        onChanged: (v) => setState(() => _activityLevel = v!),
-      );
-    }).toList();
+        onChanged: (v) => setState(() => _activityLevel = v ?? _activityLevel),
+        child: Column(
+          children: options.entries.map((e) {
+            return RadioListTile<ActivityLevel>(
+              title: Text(e.value.$1),
+              subtitle: Text(e.value.$2),
+              value: e.key,
+            );
+          }).toList(),
+        ),
+      ),
+    ];
   }
 
   List<Widget> _buildHypertensionOptions() {
@@ -283,15 +289,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       HypertensionLevel.moderate: ('Moderada', 'PA 160-179 / 100-109 mmHg'),
       HypertensionLevel.severe: ('Severa', 'PA ≥180 / ≥110 mmHg'),
     };
-    return options.entries.map((e) {
-      return RadioListTile<HypertensionLevel>(
-        title: Text(e.value.$1),
-        subtitle: Text(e.value.$2),
-        value: e.key,
+    return [
+      RadioGroup<HypertensionLevel>(
         groupValue: _hypertensionLevel,
-        onChanged: (v) => setState(() => _hypertensionLevel = v!),
-      );
-    }).toList();
+        onChanged: (v) => setState(() => _hypertensionLevel = v ?? _hypertensionLevel),
+        child: Column(
+          children: options.entries.map((e) {
+            return RadioListTile<HypertensionLevel>(
+              title: Text(e.value.$1),
+              subtitle: Text(e.value.$2),
+              value: e.key,
+            );
+          }).toList(),
+        ),
+      ),
+    ];
   }
 
   Widget _buildBloodPressurePage() {
