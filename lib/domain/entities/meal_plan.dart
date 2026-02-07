@@ -32,19 +32,19 @@ class MealPlan extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        userId,
-        title,
-        description,
-        breakfast,
-        lunch,
-        dinner,
-        snacks,
-        totalSodiumMg,
-        totalPotassiumMg,
-        totalCalories,
-        date,
-      ];
+    id,
+    userId,
+    title,
+    description,
+    breakfast,
+    lunch,
+    dinner,
+    snacks,
+    totalSodiumMg,
+    totalPotassiumMg,
+    totalCalories,
+    date,
+  ];
 }
 
 class MealPlanItem extends Equatable {
@@ -52,11 +52,7 @@ class MealPlanItem extends Equatable {
   final double portions;
   final String? note;
 
-  const MealPlanItem({
-    required this.food,
-    this.portions = 1.0,
-    this.note,
-  });
+  const MealPlanItem({required this.food, this.portions = 1.0, this.note});
 
   @override
   List<Object?> get props => [food, portions, note];

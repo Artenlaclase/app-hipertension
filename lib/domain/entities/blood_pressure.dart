@@ -30,12 +30,12 @@ class BloodPressure extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        userId,
-        systolic,
-        diastolic,
-        pulse,
-        notes,
-        recordedAt,
-      ];
+    id,
+    userId,
+    systolic,
+    diastolic,
+    pulse,
+    notes,
+    recordedAt,
+  ];
 }

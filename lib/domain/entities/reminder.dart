@@ -25,14 +25,14 @@ class Reminder extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        userId,
-        title,
-        description,
-        hour,
-        minute,
-        daysOfWeek,
-        isEnabled,
-        type,
-      ];
+    id,
+    userId,
+    title,
+    description,
+    hour,
+    minute,
+    daysOfWeek,
+    isEnabled,
+    type,
+  ];
 }

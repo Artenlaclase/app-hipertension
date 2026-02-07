@@ -29,15 +29,15 @@ class Food extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        category,
-        sodiumLevel,
-        sodiumMg,
-        potassiumMg,
-        calories,
-        saturatedFatG,
-        isRecommendedForHTA,
-        imageUrl,
-      ];
+    id,
+    name,
+    category,
+    sodiumLevel,
+    sodiumMg,
+    potassiumMg,
+    calories,
+    saturatedFatG,
+    isRecommendedForHTA,
+    imageUrl,
+  ];
 }
