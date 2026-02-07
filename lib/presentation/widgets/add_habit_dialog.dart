@@ -28,8 +28,9 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.initialTitle ?? '');
-    _descriptionController =
-        TextEditingController(text: widget.initialDescription ?? '');
+    _descriptionController = TextEditingController(
+      text: widget.initialDescription ?? '',
+    );
     _selectedIcon = widget.initialIcon ?? '✅';
   }
 
@@ -124,10 +125,7 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancelar'),
         ),
-        ElevatedButton(
-          onPressed: _submit,
-          child: const Text('Agregar'),
-        ),
+        ElevatedButton(onPressed: _submit, child: const Text('Agregar')),
       ],
     );
   }

@@ -34,8 +34,9 @@ class EducationArticlesScreen extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 20,
-                      backgroundColor:
-                          AppTheme.primaryColor.withValues(alpha: 0.1),
+                      backgroundColor: AppTheme.primaryColor.withValues(
+                        alpha: 0.1,
+                      ),
                       child: Text(
                         '${index + 1}',
                         style: const TextStyle(
@@ -224,8 +225,7 @@ class EducationArticlesScreen extends StatelessWidget {
           ),
           _Article(
             title: 'Términos engañosos en los envases',
-            summary:
-                'No te dejes engañar por el marketing alimentario.',
+            summary: 'No te dejes engañar por el marketing alimentario.',
             body:
                 'Los fabricantes usan términos que pueden confundir:\n\n'
                 '❌ "Reducido en sodio": Tiene 25% menos que la versión original, '
@@ -245,7 +245,8 @@ class EducationArticlesScreen extends StatelessWidget {
         return const [
           _Article(
             title: 'Mito: La sal marina es más saludable',
-            summary: 'La sal marina y la sal de mesa tienen la misma cantidad de sodio.',
+            summary:
+                'La sal marina y la sal de mesa tienen la misma cantidad de sodio.',
             body:
                 '🔍 Mito: "La sal marina es más saludable que la sal común"\n\n'
                 '❌ FALSO\n\n'
@@ -299,7 +300,8 @@ class EducationArticlesScreen extends StatelessWidget {
           ),
           _Article(
             title: 'Mito: El café es peligroso para la hipertensión',
-            summary: 'El café en moderación no eleva la presión de forma permanente.',
+            summary:
+                'El café en moderación no eleva la presión de forma permanente.',
             body:
                 '🔍 Mito: "Debo eliminar el café por completo si tengo HTA"\n\n'
                 '⚠️ PARCIALMENTE FALSO\n\n'

@@ -46,8 +46,9 @@ class _AddBloodPressureDialogState extends State<AddBloodPressureDialog> {
         'pulse': _pulseController.text.isNotEmpty
             ? int.parse(_pulseController.text)
             : null,
-        'notes':
-            _notesController.text.isNotEmpty ? _notesController.text : null,
+        'notes': _notesController.text.isNotEmpty
+            ? _notesController.text
+            : null,
         'recordedAt': DateTime.now().toIso8601String(),
       };
       Navigator.of(context).pop(data);

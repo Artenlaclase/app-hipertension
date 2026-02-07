@@ -124,8 +124,10 @@ class _AddFoodRecordDialogState extends State<AddFoodRecordDialog> {
                   return Card(
                     margin: const EdgeInsets.only(bottom: 6),
                     child: ListTile(
-                      leading:
-                          Text(food.emoji, style: const TextStyle(fontSize: 28)),
+                      leading: Text(
+                        food.emoji,
+                        style: const TextStyle(fontSize: 28),
+                      ),
                       title: Text(
                         food.name,
                         style: const TextStyle(fontWeight: FontWeight.w600),
@@ -175,7 +177,11 @@ class _AddFoodRecordDialogState extends State<AddFoodRecordDialog> {
       ),
       child: Text(
         label,
-        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600),
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
