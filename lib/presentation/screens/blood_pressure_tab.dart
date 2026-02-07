@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
+import '../widgets/add_blood_pressure_dialog.dart';
 
 class BloodPressureTab extends StatelessWidget {
   const BloodPressureTab({super.key});
@@ -97,8 +98,21 @@ class BloodPressureTab extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // TODO: Abrir formulario de registro
+        onPressed: () async {
+          final result = await showDialog<Map<String, dynamic>>(
+            context: context,
+            builder: (_) => const AddBloodPressureDialog(),
+          );
+          if (result != null && context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Registrado: ${result['systolic']?.toInt()}/${result['diastolic']?.toInt()} mmHg',
+                ),
+                backgroundColor: AppTheme.secondaryColor,
+              ),
+            );
+          }
         },
         icon: const Icon(Icons.add),
         label: const Text('Registrar'),

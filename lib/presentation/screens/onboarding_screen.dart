@@ -292,7 +292,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return [
       RadioGroup<HypertensionLevel>(
         groupValue: _hypertensionLevel,
-        onChanged: (v) => setState(() => _hypertensionLevel = v ?? _hypertensionLevel),
+        onChanged: (v) =>
+            setState(() => _hypertensionLevel = v ?? _hypertensionLevel),
         child: Column(
           children: options.entries.map((e) {
             return RadioListTile<HypertensionLevel>(

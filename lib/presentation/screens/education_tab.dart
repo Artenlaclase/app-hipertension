@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
+import 'education_articles_screen.dart';
 
 class EducationTab extends StatelessWidget {
   const EducationTab({super.key});
@@ -74,7 +75,14 @@ class EducationTab extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: () {
-          // TODO: Navegar a lista de artículos
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => EducationArticlesScreen(
+                categoryTitle: title,
+                categoryIcon: icon,
+              ),
+            ),
+          );
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(

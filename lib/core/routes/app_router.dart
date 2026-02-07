@@ -4,7 +4,7 @@ import '../../presentation/screens/onboarding_screen.dart';
 import '../../presentation/screens/home_screen.dart';
 
 class AppRoutes {
-  static const String disclaimer = '/disclaimer';
+  static const String disclaimer = '/';
   static const String onboarding = '/onboarding';
   static const String home = '/home';
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
+import '../widgets/add_habit_dialog.dart';
 
 class HabitsTab extends StatelessWidget {
   const HabitsTab({super.key});
@@ -104,8 +105,19 @@ class HabitsTab extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // TODO: Crear hábito personalizado
+        onPressed: () async {
+          final result = await showDialog<Map<String, dynamic>>(
+            context: context,
+            builder: (_) => const AddHabitDialog(),
+          );
+          if (result != null && context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Hábito "${result['title']}" creado'),
+                backgroundColor: AppTheme.secondaryColor,
+              ),
+            );
+          }
         },
         icon: const Icon(Icons.add),
         label: const Text('Nuevo Hábito'),
@@ -128,8 +140,23 @@ class HabitsTab extends StatelessWidget {
         trailing: IconButton(
           icon: const Icon(Icons.add_circle_outline),
           color: AppTheme.primaryColor,
-          onPressed: () {
-            // TODO: Agregar hábito
+          onPressed: () async {
+            final result = await showDialog<Map<String, dynamic>>(
+              context: context,
+              builder: (_) => AddHabitDialog(
+                initialTitle: title,
+                initialDescription: description,
+                initialIcon: icon,
+              ),
+            );
+            if (result != null && context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Hábito "${result['title']}" agregado'),
+                  backgroundColor: AppTheme.secondaryColor,
+                ),
+              );
+            }
           },
         ),
       ),

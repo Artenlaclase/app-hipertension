@@ -18,7 +18,6 @@ class MyApp extends StatelessWidget {
       title: 'HTApp',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      initialRoute: AppRoutes.disclaimer,
       onGenerateRoute: AppRouter.generateRoute,
     );
   }

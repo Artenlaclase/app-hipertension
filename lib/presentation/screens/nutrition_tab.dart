@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
+import '../widgets/add_food_record_dialog.dart';
 
 class NutritionTab extends StatelessWidget {
   const NutritionTab({super.key});
@@ -72,8 +73,21 @@ class NutritionTab extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // TODO: Registrar alimento
+        onPressed: () async {
+          final result = await showDialog<Map<String, dynamic>>(
+            context: context,
+            builder: (_) => const AddFoodRecordDialog(),
+          );
+          if (result != null && context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  '${result['name']} registrado en ${result['mealType']}',
+                ),
+                backgroundColor: AppTheme.secondaryColor,
+              ),
+            );
+          }
         },
         icon: const Icon(Icons.add),
         label: const Text('Registrar Alimento'),
