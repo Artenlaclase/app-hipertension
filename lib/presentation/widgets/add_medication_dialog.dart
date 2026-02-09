@@ -187,7 +187,9 @@ class _AddMedicationDialogState extends State<AddMedicationDialog> {
                 const SizedBox(height: 8),
                 RadioGroup<TreatmentDuration>(
                   groupValue: _duration,
-                  onChanged: (v) => setState(() => _duration = v),
+                  onChanged: (v) {
+                    if (v != null) setState(() => _duration = v);
+                  },
                   child: Column(
                     children: TreatmentDuration.values.map((d) {
                       return RadioListTile<TreatmentDuration>(

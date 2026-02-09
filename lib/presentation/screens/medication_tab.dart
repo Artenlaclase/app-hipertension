@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/entities/medication.dart';
+import '../../domain/usecases/get_medications.dart';
+import '../../domain/usecases/create_medication.dart';
+import '../../domain/usecases/delete_medication.dart';
+import '../../domain/usecases/log_medication_dose.dart';
+import '../../core/usecases/usecase.dart';
 import '../widgets/add_medication_dialog.dart';
 
 class MedicationTab extends StatefulWidget {
@@ -14,22 +20,125 @@ class MedicationTab extends StatefulWidget {
 class _MedicationTabState extends State<MedicationTab> {
   final List<Medication> _medications = [];
   final Map<String, Map<String, bool>> _dosesTaken = {};
-  // _dosesTaken[medicationId][scheduledTimeIso] = true/false
+  bool _isLoading = false;
+  String? _errorMessage;
 
-  void _addMedication(Medication med) {
-    setState(() {
-      _medications.add(med);
-      _dosesTaken[med.id] = {};
-    });
+  @override
+  void initState() {
+    super.initState();
+    _loadMedications();
   }
 
-  void _toggleDose(String medicationId, DateTime scheduledTime) {
+  Future<void> _loadMedications() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final getMedications = GetIt.instance<GetMedications>();
+    final result = await getMedications(NoParams());
+
+    result.fold(
+      (failure) {
+        setState(() {
+          _errorMessage = failure.message;
+          _isLoading = false;
+        });
+      },
+      (medications) {
+        setState(() {
+          _medications.clear();
+          _medications.addAll(medications);
+          // Inicializar dosesTaken desde logs existentes
+          for (final med in medications) {
+            _dosesTaken[med.id] = {};
+            for (final dose in med.doses) {
+              if (dose.wasTaken) {
+                _dosesTaken[med.id]![dose.scheduledTime.toIso8601String()] =
+                    true;
+              }
+            }
+          }
+          _isLoading = false;
+        });
+      },
+    );
+  }
+
+  Future<void> _addMedication(Medication med) async {
+    setState(() => _isLoading = true);
+
+    final createMedication = GetIt.instance<CreateMedication>();
+    final result = await createMedication(med);
+
+    result.fold(
+      (failure) {
+        setState(() => _isLoading = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${failure.message}'),
+              backgroundColor: AppTheme.errorColor,
+            ),
+          );
+        }
+      },
+      (created) {
+        setState(() {
+          _medications.add(created);
+          _dosesTaken[created.id] = {};
+          _isLoading = false;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${created.name} agregado'),
+              backgroundColor: AppTheme.secondaryColor,
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  Future<void> _toggleDose(String medicationId, DateTime scheduledTime) async {
     final key = scheduledTime.toIso8601String();
+    final currentlyTaken = _dosesTaken[medicationId]?[key] ?? false;
+    final newState = !currentlyTaken;
+
+    // Actualizar UI inmediatamente (optimistic update)
     setState(() {
       _dosesTaken[medicationId] ??= {};
-      _dosesTaken[medicationId]![key] =
-          !(_dosesTaken[medicationId]![key] ?? false);
+      _dosesTaken[medicationId]![key] = newState;
     });
+
+    // Enviar al servidor
+    final logDose = GetIt.instance<LogMedicationDose>();
+    final result = await logDose(
+      LogDoseParams(
+        medicationId: medicationId,
+        scheduledTime: scheduledTime,
+        wasTaken: newState,
+      ),
+    );
+
+    result.fold(
+      (failure) {
+        // Revertir en caso de error
+        setState(() {
+          _dosesTaken[medicationId]![key] = currentlyTaken;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error al registrar: ${failure.message}'),
+              backgroundColor: AppTheme.errorColor,
+            ),
+          );
+        }
+      },
+      (_) {}, // Éxito, ya se actualizó la UI
+    );
   }
 
   bool _isDoseTaken(String medicationId, DateTime scheduledTime) {
@@ -37,11 +146,44 @@ class _MedicationTabState extends State<MedicationTab> {
     return _dosesTaken[medicationId]?[key] ?? false;
   }
 
-  void _deleteMedication(int index) {
+  Future<void> _deleteMedication(int index) async {
+    final med = _medications[index];
+    final deleteMedication = GetIt.instance<DeleteMedication>();
+
+    // Optimistic removal
     setState(() {
-      final med = _medications.removeAt(index);
+      _medications.removeAt(index);
       _dosesTaken.remove(med.id);
     });
+
+    final result = await deleteMedication(med.id);
+    result.fold(
+      (failure) {
+        // Revertir
+        setState(() {
+          _medications.insert(index, med);
+          _dosesTaken[med.id] = {};
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error al eliminar: ${failure.message}'),
+              backgroundColor: AppTheme.errorColor,
+            ),
+          );
+        }
+      },
+      (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${med.name} eliminado'),
+              backgroundColor: AppTheme.secondaryColor,
+            ),
+          );
+        }
+      },
+    );
   }
 
   /// Genera las horas de dosis para hoy
@@ -83,7 +225,11 @@ class _MedicationTabState extends State<MedicationTab> {
           ),
         ],
       ),
-      body: _medications.isEmpty
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _errorMessage != null
+          ? _buildErrorState(context)
+          : _medications.isEmpty
           ? _buildEmptyState(context)
           : _buildMedicationList(context),
       floatingActionButton: FloatingActionButton.extended(
@@ -93,7 +239,7 @@ class _MedicationTabState extends State<MedicationTab> {
             builder: (_) => const AddMedicationDialog(),
           );
           if (result != null) {
-            _addMedication(result);
+            await _addMedication(result);
           }
         },
         icon: const Icon(Icons.add),
@@ -125,6 +271,32 @@ class _MedicationTabState extends State<MedicationTab> {
               'Agrega tus medicamentos para recibir alertas y llevar un control de tu tratamiento.',
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.cloud_off, size: 64, color: Colors.grey.shade400),
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage ?? 'Error al cargar medicamentos',
+              style: Theme.of(context).textTheme.bodyLarge,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: _loadMedications,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Reintentar'),
             ),
           ],
         ),

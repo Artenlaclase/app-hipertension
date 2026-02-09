@@ -34,7 +34,8 @@ class MedicationRepositoryImpl implements MedicationRepository {
 
   @override
   Future<Either<Failure, Medication>> createMedication(
-      Medication medication) async {
+    Medication medication,
+  ) async {
     if (!await networkInfo.isConnected) {
       return const Left(NetworkFailure());
     }
@@ -94,20 +95,20 @@ class MedicationRepositoryImpl implements MedicationRepository {
       return const Left(NetworkFailure());
     }
     try {
-      final logModel = await remoteDataSource.createMedicationLog(
-        medicationId,
-        {
-          'taken_at': scheduledTime.toIso8601String(),
-          'status': wasTaken ? 'tomado' : 'omitido',
-        },
+      final logModel = await remoteDataSource
+          .createMedicationLog(medicationId, {
+            'taken_at': scheduledTime.toIso8601String(),
+            'status': wasTaken ? 'tomado' : 'omitido',
+          });
+      return Right(
+        MedicationDose(
+          id: logModel.id,
+          medicationId: logModel.medicationId,
+          scheduledTime: scheduledTime,
+          takenTime: wasTaken ? logModel.takenAt : null,
+          wasTaken: logModel.status == 'tomado',
+        ),
       );
-      return Right(MedicationDose(
-        id: logModel.id,
-        medicationId: logModel.medicationId,
-        scheduledTime: scheduledTime,
-        takenTime: wasTaken ? logModel.takenAt : null,
-        wasTaken: logModel.status == 'tomado',
-      ));
     } on UnauthorizedException {
       return const Left(AuthFailure());
     } on ServerException {
@@ -117,20 +118,23 @@ class MedicationRepositoryImpl implements MedicationRepository {
 
   @override
   Future<Either<Failure, List<MedicationDose>>> getDoseLogs(
-      String medicationId) async {
+    String medicationId,
+  ) async {
     if (!await networkInfo.isConnected) {
       return const Left(NetworkFailure());
     }
     try {
       final logs = await remoteDataSource.getMedicationLogs(medicationId);
       final doses = logs
-          .map((log) => MedicationDose(
-                id: log.id,
-                medicationId: log.medicationId,
-                scheduledTime: log.takenAt,
-                takenTime: log.status == 'tomado' ? log.takenAt : null,
-                wasTaken: log.status == 'tomado',
-              ))
+          .map(
+            (log) => MedicationDose(
+              id: log.id,
+              medicationId: log.medicationId,
+              scheduledTime: log.takenAt,
+              takenTime: log.status == 'tomado' ? log.takenAt : null,
+              wasTaken: log.status == 'tomado',
+            ),
+          )
           .toList();
       return Right(doses);
     } on UnauthorizedException {
@@ -141,8 +145,9 @@ class MedicationRepositoryImpl implements MedicationRepository {
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> getAdherence(
-      {String? period}) async {
+  Future<Either<Failure, Map<String, dynamic>>> getAdherence({
+    String? period,
+  }) async {
     if (!await networkInfo.isConnected) {
       return const Left(NetworkFailure());
     }
@@ -198,13 +203,15 @@ class MedicationRepositoryImpl implements MedicationRepository {
 
     // Convertir logs a doses
     final doses = model.logs
-        .map((log) => MedicationDose(
-              id: log.id,
-              medicationId: log.medicationId,
-              scheduledTime: log.takenAt,
-              takenTime: log.status == 'tomado' ? log.takenAt : null,
-              wasTaken: log.status == 'tomado',
-            ))
+        .map(
+          (log) => MedicationDose(
+            id: log.id,
+            medicationId: log.medicationId,
+            scheduledTime: log.takenAt,
+            takenTime: log.status == 'tomado' ? log.takenAt : null,
+            wasTaken: log.status == 'tomado',
+          ),
+        )
         .toList();
 
     return Medication(

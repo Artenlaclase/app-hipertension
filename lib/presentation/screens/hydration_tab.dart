@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/entities/hydration.dart';
+import '../../domain/usecases/get_hydration_records.dart';
+import '../../domain/usecases/add_hydration_record.dart';
+import '../../domain/usecases/delete_hydration_record.dart';
 import '../widgets/add_hydration_dialog.dart';
 
 class HydrationTab extends StatefulWidget {
@@ -14,6 +18,33 @@ class HydrationTab extends StatefulWidget {
 class _HydrationTabState extends State<HydrationTab> {
   final List<HydrationRecord> _records = [];
   final int _dailyGoalMl = 2000;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRecords();
+  }
+
+  Future<void> _loadRecords() async {
+    setState(() => _isLoading = true);
+
+    final getRecords = GetIt.instance<GetHydrationRecords>();
+    final result = await getRecords(DateTime.now());
+
+    result.fold(
+      (failure) {
+        setState(() => _isLoading = false);
+      },
+      (records) {
+        setState(() {
+          _records.clear();
+          _records.addAll(records);
+          _isLoading = false;
+        });
+      },
+    );
+  }
 
   int get _totalMl => _records
       .where((r) => _isToday(r.timestamp))
@@ -27,16 +58,54 @@ class _HydrationTabState extends State<HydrationTab> {
     return dt.year == now.year && dt.month == now.month && dt.day == now.day;
   }
 
-  void _addRecord(HydrationRecord record) {
-    setState(() {
-      _records.add(record);
-    });
+  Future<void> _addRecord(HydrationRecord record) async {
+    final addRecord = GetIt.instance<AddHydrationRecord>();
+    final result = await addRecord(record);
+
+    result.fold(
+      (failure) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${failure.message}'),
+              backgroundColor: AppTheme.errorColor,
+            ),
+          );
+        }
+      },
+      (saved) {
+        setState(() {
+          _records.add(saved);
+        });
+      },
+    );
   }
 
-  void _deleteRecord(int index) {
-    setState(() {
-      _records.removeAt(index);
-    });
+  Future<void> _deleteRecord(int index) async {
+    final todayRecords = _todayRecords;
+    if (index >= todayRecords.length) return;
+    final record = todayRecords[index];
+
+    final deleteRecord = GetIt.instance<DeleteHydrationRecord>();
+    final result = await deleteRecord(record.id);
+
+    result.fold(
+      (failure) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${failure.message}'),
+              backgroundColor: AppTheme.errorColor,
+            ),
+          );
+        }
+      },
+      (_) {
+        setState(() {
+          _records.removeWhere((r) => r.id == record.id);
+        });
+      },
+    );
   }
 
   /// Registros de hoy, más recientes primero
@@ -59,67 +128,69 @@ class _HydrationTabState extends State<HydrationTab> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Hidratación')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Círculo de progreso
-            _buildProgressCard(context),
-            const SizedBox(height: 16),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Círculo de progreso
+                  _buildProgressCard(context),
+                  const SizedBox(height: 16),
 
-            // Botones rápidos
-            _buildQuickAddSection(context),
-            const SizedBox(height: 20),
+                  // Botones rápidos
+                  _buildQuickAddSection(context),
+                  const SizedBox(height: 20),
 
-            // Resumen por tipo
-            if (_todaySummaryByType.isNotEmpty) ...[
-              Text(
-                'Resumen por tipo',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 12),
-              _buildTypeSummary(context),
-              const SizedBox(height: 20),
-            ],
-
-            // Historial de hoy
-            Text(
-              'Historial de hoy',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 12),
-            if (_todayRecords.isEmpty)
-              Card(
-                margin: EdgeInsets.zero,
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Center(
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.water_drop_outlined,
-                          size: 48,
-                          color: Colors.grey.shade400,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Aún no has registrado líquidos hoy',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
+                  // Resumen por tipo
+                  if (_todaySummaryByType.isNotEmpty) ...[
+                    Text(
+                      'Resumen por tipo',
+                      style: Theme.of(context).textTheme.titleLarge,
                     ),
+                    const SizedBox(height: 12),
+                    _buildTypeSummary(context),
+                    const SizedBox(height: 20),
+                  ],
+
+                  // Historial de hoy
+                  Text(
+                    'Historial de hoy',
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                ),
-              )
-            else
-              ..._todayRecords.asMap().entries.map((entry) {
-                return _buildRecordTile(context, entry.value, entry.key);
-              }),
-            const SizedBox(height: 80),
-          ],
-        ),
-      ),
+                  const SizedBox(height: 12),
+                  if (_todayRecords.isEmpty)
+                    Card(
+                      margin: EdgeInsets.zero,
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Center(
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.water_drop_outlined,
+                                size: 48,
+                                color: Colors.grey.shade400,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Aún no has registrado líquidos hoy',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    ..._todayRecords.asMap().entries.map((entry) {
+                      return _buildRecordTile(context, entry.value, entry.key);
+                    }),
+                  const SizedBox(height: 80),
+                ],
+              ),
+            ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           final result = await showDialog<HydrationRecord>(
@@ -127,7 +198,7 @@ class _HydrationTabState extends State<HydrationTab> {
             builder: (_) => const AddHydrationDialog(),
           );
           if (result != null) {
-            _addRecord(result);
+            await _addRecord(result);
           }
         },
         icon: const Icon(Icons.add),
@@ -250,7 +321,7 @@ class _HydrationTabState extends State<HydrationTab> {
                 context,
                 icon: '💧',
                 label: '1 vaso de agua',
-                onTap: () => _addRecord(
+                onTap: () async => await _addRecord(
                   HydrationRecord(
                     id: DateTime.now().millisecondsSinceEpoch.toString(),
                     liquidType: LiquidType.water,
@@ -266,7 +337,7 @@ class _HydrationTabState extends State<HydrationTab> {
                 context,
                 icon: '🍵',
                 label: '1 taza de té',
-                onTap: () => _addRecord(
+                onTap: () async => await _addRecord(
                   HydrationRecord(
                     id: DateTime.now().millisecondsSinceEpoch.toString(),
                     liquidType: LiquidType.infusion,
@@ -282,7 +353,7 @@ class _HydrationTabState extends State<HydrationTab> {
                 context,
                 icon: '🧃',
                 label: '1 jugo',
-                onTap: () => _addRecord(
+                onTap: () async => await _addRecord(
                   HydrationRecord(
                     id: DateTime.now().millisecondsSinceEpoch.toString(),
                     liquidType: LiquidType.juice,
