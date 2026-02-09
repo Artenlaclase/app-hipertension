@@ -10,10 +10,7 @@ class ApiClient {
   final http.Client httpClient;
   final AuthTokenService authTokenService;
 
-  ApiClient({
-    required this.httpClient,
-    required this.authTokenService,
-  });
+  ApiClient({required this.httpClient, required this.authTokenService});
 
   /// Common headers for all requests.
   Map<String, String> get _headers {
@@ -33,9 +30,9 @@ class ApiClient {
     String endpoint, {
     Map<String, String>? queryParams,
   }) async {
-    final uri = Uri.parse('${ApiConstants.baseUrl}$endpoint').replace(
-      queryParameters: queryParams,
-    );
+    final uri = Uri.parse(
+      '${ApiConstants.baseUrl}$endpoint',
+    ).replace(queryParameters: queryParams);
     try {
       final response = await httpClient.get(uri, headers: _headers);
       return _handleResponse(response);
@@ -45,10 +42,7 @@ class ApiClient {
   }
 
   /// POST request.
-  Future<dynamic> post(
-    String endpoint, {
-    Map<String, dynamic>? body,
-  }) async {
+  Future<dynamic> post(String endpoint, {Map<String, dynamic>? body}) async {
     final uri = Uri.parse('${ApiConstants.baseUrl}$endpoint');
     try {
       final response = await httpClient.post(
@@ -63,10 +57,7 @@ class ApiClient {
   }
 
   /// PUT request.
-  Future<dynamic> put(
-    String endpoint, {
-    Map<String, dynamic>? body,
-  }) async {
+  Future<dynamic> put(String endpoint, {Map<String, dynamic>? body}) async {
     final uri = Uri.parse('${ApiConstants.baseUrl}$endpoint');
     try {
       final response = await httpClient.put(

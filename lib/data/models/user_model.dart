@@ -35,7 +35,8 @@ class UserModel extends UserProfile {
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : DateTime.now(),
-      hasAcceptedDisclaimer: json['onboarding_completed'] == true ||
+      hasAcceptedDisclaimer:
+          json['onboarding_completed'] == true ||
           json['onboarding_completed'] == 1,
     );
   }

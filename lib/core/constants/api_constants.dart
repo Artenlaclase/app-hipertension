@@ -22,7 +22,8 @@ class ApiConstants {
   static const String mealPlans = '/meal-plans';
 
   // Nutritional Recommendations
-  static const String nutritionalRecommendations = '/nutritional-recommendations';
+  static const String nutritionalRecommendations =
+      '/nutritional-recommendations';
 
   // Medications
   static const String medications = '/medications';

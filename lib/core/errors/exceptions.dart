@@ -13,7 +13,9 @@ class CacheException implements Exception {
 
 class UnauthorizedException implements Exception {
   final String message;
-  UnauthorizedException([this.message = 'No autorizado. Inicie sesión nuevamente.']);
+  UnauthorizedException([
+    this.message = 'No autorizado. Inicie sesión nuevamente.',
+  ]);
 }
 
 class NotFoundException implements Exception {
