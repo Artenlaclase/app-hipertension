@@ -6,6 +6,7 @@ import '../../presentation/screens/login_screen.dart';
 import '../../presentation/screens/register_screen.dart';
 import '../../presentation/screens/onboarding_screen.dart';
 import '../../presentation/screens/home_screen.dart';
+import '../../presentation/screens/forgot_password_screen.dart';
 
 class AppRoutes {
   static const String disclaimer = '/';
@@ -13,6 +14,7 @@ class AppRoutes {
   static const String register = '/register';
   static const String onboarding = '/onboarding';
   static const String home = '/home';
+  static const String forgotPassword = '/forgot-password';
 
   /// Determines the initial route based on auth state.
   static String get initialRoute {
@@ -42,6 +44,8 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const LoginScreen());
       case AppRoutes.register:
         return MaterialPageRoute(builder: (_) => const RegisterScreen());
+      case AppRoutes.forgotPassword:
+        return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
       case AppRoutes.onboarding:
         final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(

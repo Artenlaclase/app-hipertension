@@ -167,7 +167,16 @@ class _LoginScreenState extends State<LoginScreen> {
                           )
                         : const Text('Iniciar Sesión'),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: _isLoading
+                        ? null
+                        : () => Navigator.of(
+                            context,
+                          ).pushNamed('/forgot-password'),
+                    child: const Text('¿Olvidaste tu contraseña?'),
+                  ),
+                  const SizedBox(height: 8),
                   TextButton(
                     onPressed: () {
                       Navigator.of(context).pushNamed('/register');
