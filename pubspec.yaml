@@ -38,6 +38,9 @@ dependencies:
   equatable: ^2.0.8
   get_it: ^9.2.0
   connectivity_plus: ^7.0.0
+  http: ^1.2.0
+  shared_preferences: ^2.3.0
+  intl: ^0.20.0
 
 dev_dependencies:
   flutter_test:
