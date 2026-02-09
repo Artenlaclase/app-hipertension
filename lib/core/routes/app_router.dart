@@ -43,8 +43,11 @@ class AppRouter {
       case AppRoutes.register:
         return MaterialPageRoute(builder: (_) => const RegisterScreen());
       case AppRoutes.onboarding:
+        final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
           builder: (context) => OnboardingScreen(
+            initialName: args?['name'] as String?,
+            initialEmail: args?['email'] as String?,
             onCompleted: (profile) {
               Navigator.of(context).pushReplacementNamed(AppRoutes.home);
             },

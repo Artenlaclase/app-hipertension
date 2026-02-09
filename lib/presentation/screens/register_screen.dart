@@ -37,9 +37,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       // Registration will be wired via BLoC
-      // For now, navigate to onboarding
+      // For now, navigate to onboarding passing name & email
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/onboarding');
+        Navigator.of(context).pushReplacementNamed(
+          '/onboarding',
+          arguments: {
+            'name': _nameController.text.trim(),
+            'email': _emailController.text.trim(),
+          },
+        );
       }
     } catch (e) {
       setState(() {

@@ -4,8 +4,15 @@ import '../../domain/entities/user_profile.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final Function(UserProfile) onCompleted;
+  final String? initialName;
+  final String? initialEmail;
 
-  const OnboardingScreen({super.key, required this.onCompleted});
+  const OnboardingScreen({
+    super.key,
+    required this.onCompleted,
+    this.initialName,
+    this.initialEmail,
+  });
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -29,6 +36,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Gender _gender = Gender.male;
   ActivityLevel _activityLevel = ActivityLevel.moderate;
   HypertensionLevel _hypertensionLevel = HypertensionLevel.mild;
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-populate name from registration screen if available
+    if (widget.initialName != null && widget.initialName!.isNotEmpty) {
+      _nameController.text = widget.initialName!;
+    }
+  }
 
   @override
   void dispose() {

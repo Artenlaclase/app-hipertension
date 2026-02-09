@@ -1,0 +1,366 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../../core/theme/app_theme.dart';
+import '../../domain/entities/hydration.dart';
+import '../widgets/add_hydration_dialog.dart';
+
+class HydrationTab extends StatefulWidget {
+  const HydrationTab({super.key});
+
+  @override
+  State<HydrationTab> createState() => _HydrationTabState();
+}
+
+class _HydrationTabState extends State<HydrationTab> {
+  final List<HydrationRecord> _records = [];
+  final int _dailyGoalMl = 2000;
+
+  int get _totalMl => _records
+      .where((r) => _isToday(r.timestamp))
+      .fold(0, (sum, r) => sum + r.amountMl);
+
+  double get _progress => _totalMl / _dailyGoalMl;
+  int get _glassesCount => (_totalMl / 250).floor();
+
+  bool _isToday(DateTime dt) {
+    final now = DateTime.now();
+    return dt.year == now.year && dt.month == now.month && dt.day == now.day;
+  }
+
+  void _addRecord(HydrationRecord record) {
+    setState(() {
+      _records.add(record);
+    });
+  }
+
+  void _deleteRecord(int index) {
+    setState(() {
+      _records.removeAt(index);
+    });
+  }
+
+  /// Registros de hoy, más recientes primero
+  List<HydrationRecord> get _todayRecords {
+    final today = _records.where((r) => _isToday(r.timestamp)).toList();
+    today.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    return today;
+  }
+
+  /// Resumen por tipo de líquido hoy
+  Map<LiquidType, int> get _todaySummaryByType {
+    final map = <LiquidType, int>{};
+    for (final r in _todayRecords) {
+      map[r.liquidType] = (map[r.liquidType] ?? 0) + r.amountMl;
+    }
+    return map;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Hidratación')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Círculo de progreso
+            _buildProgressCard(context),
+            const SizedBox(height: 16),
+
+            // Botones rápidos
+            _buildQuickAddSection(context),
+            const SizedBox(height: 20),
+
+            // Resumen por tipo
+            if (_todaySummaryByType.isNotEmpty) ...[
+              Text(
+                'Resumen por tipo',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 12),
+              _buildTypeSummary(context),
+              const SizedBox(height: 20),
+            ],
+
+            // Historial de hoy
+            Text(
+              'Historial de hoy',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 12),
+            if (_todayRecords.isEmpty)
+              Card(
+                margin: EdgeInsets.zero,
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.water_drop_outlined,
+                          size: 48,
+                          color: Colors.grey.shade400,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Aún no has registrado líquidos hoy',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            else
+              ..._todayRecords.asMap().entries.map((entry) {
+                return _buildRecordTile(context, entry.value, entry.key);
+              }),
+            const SizedBox(height: 80),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final result = await showDialog<HydrationRecord>(
+            context: context,
+            builder: (_) => const AddHydrationDialog(),
+          );
+          if (result != null) {
+            _addRecord(result);
+          }
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('Registrar'),
+      ),
+    );
+  }
+
+  Widget _buildProgressCard(BuildContext context) {
+    final clampedProgress = _progress.clamp(0.0, 1.0);
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('💧', style: TextStyle(fontSize: 24)),
+                const SizedBox(width: 8),
+                Text(
+                  'Meta diaria',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: 140,
+              height: 140,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 140,
+                    height: 140,
+                    child: CircularProgressIndicator(
+                      value: clampedProgress,
+                      strokeWidth: 12,
+                      backgroundColor: Colors.blue.shade50,
+                      valueColor: AlwaysStoppedAnimation(
+                        _progress >= 1.0
+                            ? AppTheme.secondaryColor
+                            : Colors.blue.shade400,
+                      ),
+                    ),
+                  ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '$_totalMl',
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'de $_dailyGoalMl ml',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '$_glassesCount vasos (≈ 250ml c/u)',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            if (_progress >= 1.0) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.secondaryColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.check_circle,
+                      size: 16,
+                      color: AppTheme.secondaryColor,
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      '¡Meta alcanzada!',
+                      style: TextStyle(
+                        color: AppTheme.secondaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickAddSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Registro rápido', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildQuickButton(
+                context,
+                icon: '💧',
+                label: '1 vaso de agua',
+                onTap: () => _addRecord(
+                  HydrationRecord(
+                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    liquidType: LiquidType.water,
+                    amountMl: 250,
+                    timestamp: DateTime.now(),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildQuickButton(
+                context,
+                icon: '🍵',
+                label: '1 taza de té',
+                onTap: () => _addRecord(
+                  HydrationRecord(
+                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    liquidType: LiquidType.infusion,
+                    amountMl: 200,
+                    timestamp: DateTime.now(),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildQuickButton(
+                context,
+                icon: '🧃',
+                label: '1 jugo',
+                onTap: () => _addRecord(
+                  HydrationRecord(
+                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    liquidType: LiquidType.juice,
+                    amountMl: 200,
+                    timestamp: DateTime.now(),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickButton(
+    BuildContext context, {
+    required String icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      margin: EdgeInsets.zero,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+          child: Column(
+            children: [
+              Text(icon, style: const TextStyle(fontSize: 28)),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: const TextStyle(fontSize: 11),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTypeSummary(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: _todaySummaryByType.entries.map((entry) {
+        return Chip(
+          avatar: Text(entry.key.icon, style: const TextStyle(fontSize: 16)),
+          label: Text('${entry.key.label}: ${entry.value}ml'),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildRecordTile(
+    BuildContext context,
+    HydrationRecord record,
+    int index,
+  ) {
+    final timeStr = DateFormat('HH:mm').format(record.timestamp);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Text(
+          record.liquidType.icon,
+          style: const TextStyle(fontSize: 28),
+        ),
+        title: Text(record.liquidType.label),
+        subtitle: Text('${record.amountMl}ml · $timeStr'),
+        trailing: IconButton(
+          icon: const Icon(Icons.delete_outline, size: 20),
+          color: Colors.grey,
+          onPressed: () => _deleteRecord(index),
+        ),
+      ),
+    );
+  }
+}

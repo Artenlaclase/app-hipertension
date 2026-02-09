@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'home_tab.dart';
 import 'blood_pressure_tab.dart';
+import 'medication_tab.dart';
+import 'hydration_tab.dart';
 import 'nutrition_tab.dart';
 import 'education_tab.dart';
 import 'habits_tab.dart';
@@ -18,6 +20,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _tabs = const [
     HomeTab(),
     BloodPressureTab(),
+    MedicationTab(),
+    HydrationTab(),
     NutritionTab(),
     EducationTab(),
     HabitsTab(),
@@ -40,6 +44,16 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.favorite_outline),
             activeIcon: Icon(Icons.favorite),
             label: 'Presión',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.medication_outlined),
+            activeIcon: Icon(Icons.medication),
+            label: 'Medicamentos',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.water_drop_outlined),
+            activeIcon: Icon(Icons.water_drop),
+            label: 'Hidratación',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.restaurant_outlined),

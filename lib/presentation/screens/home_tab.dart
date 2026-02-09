@@ -37,6 +37,30 @@ class HomeTab extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
+            // Tarjeta Medicamentos
+            _buildSummaryCard(
+              context,
+              icon: Icons.medication,
+              iconColor: const Color(0xFF7B1FA2),
+              title: 'Medicamentos',
+              subtitle: 'Controla tus dosis',
+              actionText: 'Ver alertas',
+              onTap: () {},
+            ),
+            const SizedBox(height: 12),
+
+            // Tarjeta Hidratación
+            _buildSummaryCard(
+              context,
+              icon: Icons.water_drop,
+              iconColor: Colors.blue.shade400,
+              title: 'Hidratación',
+              subtitle: 'Registra tu consumo de líquidos',
+              actionText: 'Registrar',
+              onTap: () {},
+            ),
+            const SizedBox(height: 12),
+
             // Tarjeta Nutrición
             _buildSummaryCard(
               context,
